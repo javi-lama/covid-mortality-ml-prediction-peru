@@ -46,21 +46,6 @@ The following object is masked from ‘package:dplyr’:
 
 Running plumber API at http://0.0.0.0:8000
 Running swagger Docs at http://127.0.0.1:8000/__docs__/
-[2026-02-06 19:27:46] GET /health
-[2026-02-06 19:27:46] GET /health
-[2026-02-06 19:28:08] POST /predict
-  Body: {"edad":20,"sexo":"mujer","severidad_sars":"Moderado","albumina":4.1,"plaquetas":340000,"bilirrtotal":0.8,"sxingr_disnea":true,"sxingr_cefalea":false}
-  SHAP calculation time: 9.67 seconds
-  Total request time: 9.89 seconds
-[2026-02-06 19:29:11] POST /predict
-  Body: {"edad":89,"sexo":"hombre","severidad_sars":"Severo","albumina":3.4,"plaquetas":80000,"bilirrtotal":1,"sxingr_disnea":true,"sxingr_cefalea":false}
-  SHAP calculation time: 9.69 seconds
-  Total request time: 9.74 seconds
-[2026-02-06 19:31:13] POST /predict
-  Body: {"edad":49,"sexo":"mujer","severidad_sars":"Leve","albumina":2.9,"plaquetas":70000,"bilirrtotal":1.2,"sxingr_disnea":false,"sxingr_cefalea":true}
-  SHAP calculation time: 9.67 seconds
-  Total request time: 9.74 seconds
-[2026-02-06 19:32:07] POST /predict
-  Body: {"edad":61,"sexo":"hombre","severidad_sars":"Severo","albumina":3.3,"plaquetas":460000,"bilirrtotal":0.5,"sxingr_disnea":false,"sxingr_cefalea":true}
-  SHAP calculation time: 10.11 seconds
-  Total request time: 10.18 seconds
+[2026-02-08 12:56:56] GET /health
+[2026-02-08 12:56:56] GET /health
+[2026-02-08 12:57:22] GET /health

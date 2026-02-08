@@ -20,20 +20,26 @@ parse_bool <- function(x) {
 # 1. LOAD MODEL & DATA
 # We need the training data to calculate the "Baselines" for imputation
 # In production, these should be saved as an .rds to avoid sourcing/re-calculating
-source("Data_Cleaning_Organization.R")
-source("Random_Forest_Preprocess.R") 
+
+# Determine base paths (scripts are in r/, artifacts are in parent directory)
+script_dir <- if (file.exists("Data_Cleaning_Organization.R")) "." else "r"
+artifact_dir <- if (file.exists("modelo_rf_covid.rds")) "." else ".."
+
+source(file.path(script_dir, "Data_Cleaning_Organization.R"))
+source(file.path(script_dir, "Random_Forest_Preprocess.R"))
 
 # Load the best model (For now we load the RF, but can switch to XGBoost later)
 # Assuming 'final_fit' object exists from source or saved RDS
 # If running standalone, we should load the RDS:
 # model <- readRDS("model_xgboost_fit.rds") # Example
 # For this script, we assume 'final_rf_workflow' is available from source or we load it:
-# model <- readRDS("modelo_rf_covid.rds") 
+# model <- readRDS("modelo_rf_covid.rds")
 
 # Fallback provided for the example if object is missing in this session context:
 if(!exists("final_rf_workflow")) {
-   if(file.exists("modelo_rf_covid.rds")) {
-     model <- readRDS("modelo_rf_covid.rds")
+   model_path <- file.path(artifact_dir, "modelo_rf_covid.rds")
+   if(file.exists(model_path)) {
+     model <- readRDS(model_path)
    } else {
      stop("Model not found! Run training scripts first.")
    }

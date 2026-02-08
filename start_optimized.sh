@@ -49,7 +49,7 @@ done
 if [ $MISSING -eq 1 ]; then
     echo ""
     echo -e "${YELLOW}Building artifacts first (one-time setup)...${NC}"
-    Rscript build_artifacts.R
+    Rscript r/build_artifacts.R
     echo ""
 fi
 
@@ -82,7 +82,7 @@ echo -e "${YELLOW}[2/4] Starting OPTIMIZED R API on port $API_PORT...${NC}"
 cd "$PROJECT_DIR"
 
 # Use api_optimized.R for fast startup
-Rscript -e "library(plumber); pr('api_optimized.R') %>% pr_run(host='0.0.0.0', port=$API_PORT)" > api_server.log 2>&1 &
+Rscript -e "library(plumber); pr('r/api_optimized.R') %>% pr_run(host='0.0.0.0', port=$API_PORT)" > api_server.log 2>&1 &
 API_PID=$!
 echo "   API started with PID: $API_PID"
 

@@ -43,6 +43,9 @@ cat("  COVID-19 MORTALITY PREDICTION API (OPTIMIZED)\n")
 cat("================================================================\n")
 cat("  Loading pre-built artifacts...\n")
 
+# Determine base path (artifacts are in parent directory when running from r/)
+base_path <- if (file.exists("final_workflow_optimized.rds")) "." else ".."
+
 # Check required artifacts exist
 required_files <- c(
   "final_workflow_optimized.rds",
@@ -52,16 +55,17 @@ required_files <- c(
 )
 
 for (file in required_files) {
-  if (!file.exists(file)) {
-    stop(sprintf("ERROR: Required artifact not found: %s\n  Run 'Rscript build_artifacts.R' first.", file))
+  full_path <- file.path(base_path, file)
+  if (!file.exists(full_path)) {
+    stop(sprintf("ERROR: Required artifact not found: %s\n  Run 'Rscript r/build_artifacts.R' first.", file))
   }
 }
 
 # Load artifacts
-model <- readRDS("final_workflow_optimized.rds")
-explainer <- readRDS("explainer_optimized.rds")
-patient_template <- readRDS("patient_template.rds")
-df_training <- readRDS("df_training_cached.rds")
+model <- readRDS(file.path(base_path, "final_workflow_optimized.rds"))
+explainer <- readRDS(file.path(base_path, "explainer_optimized.rds"))
+patient_template <- readRDS(file.path(base_path, "patient_template.rds"))
+df_training <- readRDS(file.path(base_path, "df_training_cached.rds"))
 
 startup_time <- as.numeric(difftime(Sys.time(), startup_start, units = "secs"))
 

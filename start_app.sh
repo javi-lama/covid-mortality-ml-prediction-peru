@@ -55,7 +55,7 @@ echo -e "${YELLOW}[2/4] Starting R Plumber API on port $API_PORT...${NC}"
 cd "$PROJECT_DIR"
 
 # Start R API in background, redirect output to log file
-Rscript -e "library(plumber); pr('api.R') %>% pr_run(host='0.0.0.0', port=$API_PORT)" > api_server.log 2>&1 &
+Rscript -e "library(plumber); pr('r/api.R') %>% pr_run(host='0.0.0.0', port=$API_PORT)" > api_server.log 2>&1 &
 API_PID=$!
 echo "   API started with PID: $API_PID"
 echo "   Log file: api_server.log"
