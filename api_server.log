@@ -1,0 +1,66 @@
+── Attaching packages ────────────────────────────────────── tidymodels 1.4.1 ──
+✔ broom        1.0.10     ✔ recipes      1.3.1 
+✔ dials        1.4.2      ✔ rsample      1.3.1 
+✔ dplyr        1.1.4      ✔ tailor       0.1.0 
+✔ ggplot2      4.0.0      ✔ tidyr        1.3.1 
+✔ infer        1.1.0      ✔ tune         2.0.1 
+✔ modeldata    1.5.1      ✔ workflows    1.3.0 
+✔ parsnip      1.4.0      ✔ workflowsets 1.1.1 
+✔ purrr        1.2.0      ✔ yardstick    1.3.2 
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ purrr::discard() masks scales::discard()
+✖ dplyr::filter()  masks stats::filter()
+✖ dplyr::lag()     masks stats::lag()
+✖ recipes::step()  masks stats::step()
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ forcats   1.0.1     ✔ stringr   1.6.0
+✔ lubridate 1.9.4     ✔ tibble    3.3.0
+✔ readr     2.1.5     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ readr::col_factor() masks scales::col_factor()
+✖ purrr::discard()    masks scales::discard()
+✖ dplyr::filter()     masks stats::filter()
+✖ stringr::fixed()    masks recipes::fixed()
+✖ dplyr::lag()        masks stats::lag()
+✖ readr::spec()       masks yardstick::spec()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+Welcome to DALEX (version: 2.5.3).
+Find examples and detailed introduction at: http://ema.drwhy.ai/
+
+
+Attaching package: ‘DALEX’
+
+The following object is masked from ‘package:dplyr’:
+
+    explain
+
+
+================================================================
+  COVID-19 MORTALITY PREDICTION API (OPTIMIZED)
+================================================================
+  Loading pre-built artifacts...
+  Startup time: 0.05 seconds
+  Model: Random Forest COVID-19 Mortality
+  SHAP background: 16 stratified samples (B=8 permutations)
+================================================================
+
+Running plumber API at http://0.0.0.0:8000
+Running swagger Docs at http://127.0.0.1:8000/__docs__/
+[2026-02-06 19:27:46] GET /health
+[2026-02-06 19:27:46] GET /health
+[2026-02-06 19:28:08] POST /predict
+  Body: {"edad":20,"sexo":"mujer","severidad_sars":"Moderado","albumina":4.1,"plaquetas":340000,"bilirrtotal":0.8,"sxingr_disnea":true,"sxingr_cefalea":false}
+  SHAP calculation time: 9.67 seconds
+  Total request time: 9.89 seconds
+[2026-02-06 19:29:11] POST /predict
+  Body: {"edad":89,"sexo":"hombre","severidad_sars":"Severo","albumina":3.4,"plaquetas":80000,"bilirrtotal":1,"sxingr_disnea":true,"sxingr_cefalea":false}
+  SHAP calculation time: 9.69 seconds
+  Total request time: 9.74 seconds
+[2026-02-06 19:31:13] POST /predict
+  Body: {"edad":49,"sexo":"mujer","severidad_sars":"Leve","albumina":2.9,"plaquetas":70000,"bilirrtotal":1.2,"sxingr_disnea":false,"sxingr_cefalea":true}
+  SHAP calculation time: 9.67 seconds
+  Total request time: 9.74 seconds
+[2026-02-06 19:32:07] POST /predict
+  Body: {"edad":61,"sexo":"hombre","severidad_sars":"Severo","albumina":3.3,"plaquetas":460000,"bilirrtotal":0.5,"sxingr_disnea":false,"sxingr_cefalea":true}
+  SHAP calculation time: 10.11 seconds
+  Total request time: 10.18 seconds

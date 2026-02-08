@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-glass-100: rgba(255, 255, 255, 0.1);
+  --color-glass-200: rgba(255, 255, 255, 0.2);
+  --color-glass-300: rgba(255, 255, 255, 0.3);
+  --color-glass-900: rgba(0, 0, 0, 0.5);
+
+  --font-sans: 'Inter', sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}

@@ -1,0 +1,22 @@
+# --- Archivos de Sistema y R ---
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+
+# --- DATOS SENSIBLES Y PESADOS (CRÍTICO) ---
+# Ignorar TODOS los archivos de datos por defecto
+*.csv
+*.xlsx
+*.xls
+*.rds
+*.RData
+*.rda
+*.tsv
+*.json
+*.xml
+*.Rproj
+
+# Ignorar carpetas enteras de datos
+data/

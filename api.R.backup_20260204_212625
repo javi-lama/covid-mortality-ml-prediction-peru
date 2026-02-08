@@ -1,0 +1,237 @@
+# ==== API.R: PLUMBER API FOR COVID-19 MORTALITY CALCULATOR ====
+# Purpose: Serve the ML Model to the React Frontend
+# Strategy: "Hybrid Input" - User provides 8 keys, API fills the rest with population medians (Imputation)
+
+library(plumber)
+library(tidymodels)
+library(tidyverse)
+library(DALEX)
+library(DALEXtra)
+
+# 1. LOAD MODEL & DATA
+# We need the training data to calculate the "Baselines" for imputation
+# In production, these should be saved as an .rds to avoid sourcing/re-calculating
+source("Data_Cleaning_Organization.R")
+source("Random_Forest_Preprocess.R") 
+
+# Load the best model (For now we load the RF, but can switch to XGBoost later)
+# Assuming 'final_fit' object exists from source or saved RDS
+# If running standalone, we should load the RDS:
+# model <- readRDS("model_xgboost_fit.rds") # Example
+# For this script, we assume 'final_rf_workflow' is available from source or we load it:
+# model <- readRDS("modelo_rf_covid.rds") 
+
+# Fallback provided for the example if object is missing in this session context:
+if(!exists("final_rf_workflow")) {
+   if(file.exists("modelo_rf_covid.rds")) {
+     model <- readRDS("modelo_rf_covid.rds")
+   } else {
+     stop("Model not found! Run training scripts first.")
+   }
+} else {
+  model <- final_rf_workflow
+}
+
+# 2. PREPARE EXPLAINER (For SHAP)
+explainer <- explain_tidymodels(
+  model,
+  data = df_testing %>% select(-desenlace),
+  y = df_testing$desenlace == "Fallecido",
+  verbose = FALSE
+)
+
+# ==== 3. SETUP MULTIPLE IMPUTATION (MICE) FOR CLINICAL VALIDITY ====
+# Publication-quality imputation strategy to replace naive median approach
+
+library(mice)
+
+# Helper function for mode
+get_mode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+# Create and save imputation model (one-time setup)
+# This preserves feature correlations unlike naive median imputation
+if(!file.exists("imputation_model.rds")) {
+  print("Creating MICE imputation model...")
+
+  # Create imputation setup
+  imputation_setup <- mice(
+    df_training %>% select(-desenlace),
+    m = 1,  # Single model for setup
+    maxit = 0,  # Just configuration, no actual imputation
+    seed = 2026,
+    printFlag = FALSE
+  )
+
+  # Configure imputation methods
+  # PMM (predictive mean matching) for numerics - preserves distributions
+  # Polyreg for multi-level factors - maintains factor structure
+  method_vector <- imputation_setup$method
+  method_vector[sapply(df_training %>% select(-desenlace), is.numeric)] <- "pmm"
+  method_vector[sapply(df_training %>% select(-desenlace), is.factor)] <- "polyreg"
+
+  imputation_setup$method <- method_vector
+
+  saveRDS(imputation_setup, "imputation_model.rds")
+  print("✓ Imputation model saved to imputation_model.rds")
+} else {
+  imputation_setup <- readRDS("imputation_model.rds")
+  print("✓ Loaded existing imputation model")
+}
+
+# Fallback: Simple defaults for comparison/debugging
+default_profile <- df_training %>%
+  select(-desenlace) %>%
+  summarise(across(where(is.numeric), median, na.rm = TRUE),
+            across(where(is.factor), ~get_mode(.)))
+
+# 4. API DEFINITIONS
+
+#* @apiTitle COVID-19 Mortality Risk Calculator
+#* @apiDescription R Backend providing ML inference and SHAP explainability.
+
+#* Enable CORS
+#* @filter cors
+cors <- function(res) {
+  res$setHeader("Access-Control-Allow-Origin", "*")
+  res$setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+  res$setHeader("Access-Control-Allow-Headers", "Content-Type")
+  plumber::forward()
+}
+
+#* Check API status
+#* @get /health
+function() {
+  list(status = "online", model = "XGBoost/RF Hybrid")
+}
+
+#* Predict Mortality Risk with Uncertainty Quantification
+#* @param edad Age of the patient
+#* @param sexo Sex (hombre/mujer)
+#* @param severidad_sars Severity (Leve/Moderado/Severo)
+#* @param albumina Albumin level
+#* @param plaquetas Platelet count
+#* @param bilirrtotal Total Bilirubin
+#* @param sxingr_disnea Dyspnea (TRUE/FALSE)
+#* @param sxingr_cefalea Headache (TRUE/FALSE)
+#* @post /predict
+function(edad, sexo, severidad_sars, albumina, plaquetas, bilirrtotal, sxingr_disnea, sxingr_cefalea) {
+
+  # A. Type Conversion & Validation
+  patient_observed <- tibble(
+    edad = as.numeric(edad),
+    sexo = factor(sexo, levels = levels(df_training$sexo)),
+    severidad_sars = factor(severidad_sars, levels = levels(df_training$severidad_sars)),
+    albumina = as.numeric(albumina),
+    plaquetas = as.numeric(plaquetas),
+    bilirrtotal = as.numeric(bilirrtotal),
+    sxingr_disnea = factor(as.logical(sxingr_disnea), levels = c("FALSE", "TRUE")),
+    sxingr_cefalea = factor(as.logical(sxingr_cefalea), levels = c("FALSE", "TRUE"))
+  )
+
+  # B. Create Incomplete Patient Row (Observed + NAs for unobserved)
+  all_vars <- names(df_training %>% select(-desenlace))
+  patient_incomplete <- df_training[1, ] %>% select(-desenlace)
+
+  # Set observed values
+  for(var in names(patient_observed)) {
+    patient_incomplete[[var]] <- patient_observed[[var]]
+  }
+  # Set unobserved to NA
+  for(var in setdiff(all_vars, names(patient_observed))) {
+    patient_incomplete[[var]] <- NA
+  }
+
+  # C. Multiple Imputation (m=20 for robust uncertainty quantification)
+  patient_imputed_list <- mice(
+    rbind(df_training %>% select(-desenlace), patient_incomplete),
+    m = 20,  # 20 imputation draws
+    maxit = 5,
+    method = imputation_setup$method,
+    seed = 2026,
+    printFlag = FALSE
+  )
+
+  # D. Generate Predictions Across All Imputations
+  predictions <- map_df(1:20, function(imp) {
+    imputed_data <- complete(patient_imputed_list, imp) %>%
+      slice(n())  # Get last row (our patient)
+
+    pred <- predict(model, imputed_data, type = "prob")
+    tibble(
+      imputation = imp,
+      risk_score = pred$.pred_Fallecido
+    )
+  })
+
+  # E. Calculate Summary Statistics with Uncertainty
+  risk_mean <- mean(predictions$risk_score)
+  risk_sd <- sd(predictions$risk_score)
+  risk_ci_lower <- quantile(predictions$risk_score, 0.025)
+  risk_ci_upper <- quantile(predictions$risk_score, 0.975)
+
+  # F. SHAP on Median Imputation (for stable visualization)
+  median_imputation <- complete(patient_imputed_list, action = "long") %>%
+    filter(.imp > 0) %>%
+    group_by(.id) %>%
+    summarise(across(where(is.numeric), median),
+              across(where(is.factor), ~get_mode(.))) %>%
+    filter(.id == max(.id)) %>%
+    select(-c(.id, .imp))
+
+  shap <- predict_parts(explainer, new_observation = median_imputation,
+                        type = "break_down")
+
+  shap_clean <- shap %>%
+    as_tibble() %>%
+    filter(variable != "_baseline_" & variable != "_prediction_") %>%
+    select(variable, contribution, sign) %>%
+    mutate(
+      variable_clean = case_when(
+        str_detect(variable, "severidad") ~ "Severidad",
+        str_detect(variable, "edad") ~ "Edad",
+        str_detect(variable, "albumina") ~ "Albúmina",
+        str_detect(variable, "plaquetas") ~ "Plaquetas",
+        str_detect(variable, "bilirr") ~ "Bilirrubina",
+        str_detect(variable, "disnea") ~ "Disnea",
+        str_detect(variable, "cefalea") ~ "Cefalea",
+        TRUE ~ variable
+      )
+    ) %>%
+    arrange(desc(abs(contribution))) %>%
+    head(10)
+
+  # G. Return JSON with Uncertainty Quantification
+  list(
+    # Point estimates
+    risk_score = risk_mean,
+    risk_percentage = round(risk_mean * 100, 1),
+    risk_level = ifelse(risk_mean < 0.20, "Low",
+                       ifelse(risk_mean < 0.50, "Moderate", "High")),
+
+    # Uncertainty quantification (NEW)
+    uncertainty = list(
+      risk_ci_lower = round(risk_ci_lower * 100, 1),
+      risk_ci_upper = round(risk_ci_upper * 100, 1),
+      risk_sd = round(risk_sd * 100, 1),
+      confidence_note = paste0("95% CI: ", round(risk_ci_lower*100,1), "-",
+                              round(risk_ci_upper*100,1), "%")
+    ),
+
+    # Imputation transparency (NEW)
+    imputation_diagnostics = list(
+      method = "Multiple Imputation (MICE)",
+      imputations = 20,
+      observed_vars = length(names(patient_observed)),
+      imputed_vars = length(setdiff(all_vars, names(patient_observed))),
+      imputation_pct = round(length(setdiff(all_vars, names(patient_observed))) / length(all_vars) * 100, 1),
+      observed_variables = names(patient_observed),
+      note = "Prediction accounts for uncertainty in unobserved variables"
+    ),
+
+    # Explainability
+    explanation = shap_clean
+  )
+}
