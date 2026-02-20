@@ -46,6 +46,17 @@ The following object is masked from ‘package:dplyr’:
 
 Running plumber API at http://0.0.0.0:8000
 Running swagger Docs at http://127.0.0.1:8000/__docs__/
-[2026-02-08 12:56:56] GET /health
-[2026-02-08 12:56:56] GET /health
-[2026-02-08 12:57:22] GET /health
+[2026-02-08 13:00:49] GET /health
+[2026-02-08 13:00:49] GET /health
+[2026-02-08 13:01:32] POST /predict
+  Body: {"edad":23,"sexo":"mujer","severidad_sars":"Leve","albumina":3.3,"plaquetas":450000,"bilirrtotal":0.7,"sxingr_disnea":false,"sxingr_cefalea":true}
+  SHAP calculation time: 9.37 seconds
+  Total request time: 9.62 seconds
+[2026-02-08 13:02:25] POST /predict
+  Body: {"edad":24,"sexo":"hombre","severidad_sars":"Moderado","albumina":2.9,"plaquetas":100000,"bilirrtotal":1.4,"sxingr_disnea":true,"sxingr_cefalea":false}
+  SHAP calculation time: 9.38 seconds
+  Total request time: 9.43 seconds
+[2026-02-08 13:03:12] POST /predict
+  Body: {"edad":24,"sexo":"hombre","severidad_sars":"Severo","albumina":2.8,"plaquetas":90000,"bilirrtotal":0.9,"sxingr_disnea":false,"sxingr_cefalea":true}
+  SHAP calculation time: 9.47 seconds
+  Total request time: 9.54 seconds
