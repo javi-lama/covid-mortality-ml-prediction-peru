@@ -39,24 +39,16 @@ The following object is masked from ‘package:dplyr’:
   COVID-19 MORTALITY PREDICTION API (OPTIMIZED)
 ================================================================
   Loading pre-built artifacts...
-  Startup time: 0.05 seconds
+  Startup time: 0.06 seconds
   Model: Random Forest COVID-19 Mortality
   SHAP background: 16 stratified samples (B=8 permutations)
 ================================================================
 
 Running plumber API at http://0.0.0.0:8000
 Running swagger Docs at http://127.0.0.1:8000/__docs__/
-[2026-02-08 13:00:49] GET /health
-[2026-02-08 13:00:49] GET /health
-[2026-02-08 13:01:32] POST /predict
-  Body: {"edad":23,"sexo":"mujer","severidad_sars":"Leve","albumina":3.3,"plaquetas":450000,"bilirrtotal":0.7,"sxingr_disnea":false,"sxingr_cefalea":true}
-  SHAP calculation time: 9.37 seconds
-  Total request time: 9.62 seconds
-[2026-02-08 13:02:25] POST /predict
-  Body: {"edad":24,"sexo":"hombre","severidad_sars":"Moderado","albumina":2.9,"plaquetas":100000,"bilirrtotal":1.4,"sxingr_disnea":true,"sxingr_cefalea":false}
-  SHAP calculation time: 9.38 seconds
-  Total request time: 9.43 seconds
-[2026-02-08 13:03:12] POST /predict
-  Body: {"edad":24,"sexo":"hombre","severidad_sars":"Severo","albumina":2.8,"plaquetas":90000,"bilirrtotal":0.9,"sxingr_disnea":false,"sxingr_cefalea":true}
-  SHAP calculation time: 9.47 seconds
-  Total request time: 9.54 seconds
+[2026-02-20 16:07:15] GET /health
+[2026-02-20 16:07:15] GET /health
+[2026-02-20 16:07:40] POST /predict
+  Body: {"edad":56,"sexo":"hombre","severidad_sars":"Severo","albumina":3.1,"plaquetas":140000,"bilirrtotal":1.2,"sxingr_disnea":true,"sxingr_cefalea":false}
+  SHAP calculation time: 9.67 seconds
+  Total request time: 9.92 seconds
